@@ -31,8 +31,13 @@ if (DogsApp.initPage("calendario")) {
       if (!datas.length) { listEl.innerHTML = '<p class="empty-state">Nenhuma data futura cadastrada.</p>'; return; }
       listEl.innerHTML = datas.map(d => {
         const materia = d.materia || materias.find(m => String(m.id) === String(d.id_materia))?.nome_materia || "Sem matéria";
-        return `<article class="resource-card calendar-card"><div class="date-badge"><strong>${escapeHtml(new Date(String(d.data_hora).replace(" ", "T")).getDate() || "—")}</strong><span>${escapeHtml(new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(new Date(String(d.data_hora).replace(" ", "T"))).replace(".", ""))}</span></div><div class="resource-main"><span class="resource-kicker">${escapeHtml(materia)}</span><h3>${escapeHtml(d.titulo)}</h3><time>${escapeHtml(DogsApp.formatDate(d.data_hora))}</time>${d.descricao ? `<p class="resource-description">${escapeHtml(d.descricao)}</p>` : ""}</div>${admin ? `<div class="resource-actions"><button class="button button-quiet" data-action="edit" data-id="${escapeHtml(d.id)}">Editar</button><button class="button button-danger" data-action="delete" data-id="${escapeHtml(d.id)}">Excluir</button></div>` : ""}</article>`;
+        return `<article class="resource-card calendar-card"><div class="date-badge"><strong>${escapeHtml(new Date(String(d.data_hora).replace(" ", "T")).getDate() || "—")}</strong><span>${escapeHtml(new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(new Date(String(d.data_hora).replace(" ", "T"))).replace(".", ""))}</span></div><div class="resource-main"><span class="resource-kicker">${escapeHtml(materia)}</span><h3>${escapeHtml(d.titulo)}</h3><time>${escapeHtml(DogsApp.formatDate(d.data_hora))}</time>${d.descricao ? `<p class="resource-description">${escapeHtml(d.descricao)}</p>` : ""}</div>${admin ? `<div class="resource-actions"><button class="button button-quiet" data-action="edit" data-id="${escapeHtml(d.id)}">Editar</button><button class="button button-danger" data-action="delete" data-id="${escapeHtml(d.id)}">Excluir</button></div>` : ""}<div class="image-manager-slot" data-image-manager-for="${escapeHtml(d.id)}"></div></article>`;
       }).join("");
+      listEl.querySelectorAll("[data-image-manager-for]").forEach(slot => {
+        DogsApp.setupImageManager(slot, "data_importante", Number(slot.dataset.imageManagerFor), {
+          canUpload: admin, canDelete: admin, title: "Imagens do compromisso",
+        });
+      });
     } catch (error) { listEl.innerHTML = `<p class="notice error">${escapeHtml(error.message)}</p>`; }
   }
 

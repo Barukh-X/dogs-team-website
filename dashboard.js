@@ -5,28 +5,25 @@ if (DogsApp.initPage("dashboard")) {
   const anotacoesEl = document.getElementById("ultimas-anotacoes");
 
   async function carregarPainel() {
-    try {
-      const health = await DogsAPI.request("/api/health", { auth: false });
-      statusEl.textContent = health.mensagem || "API online";
-      statusEl.className = "status-pill online";
-    } catch (error) {
-      statusEl.textContent = error.message;
-      statusEl.className = "status-pill offline";
-    }
+    statusEl.textContent = "Sessão autenticada";
+    statusEl.className = "status-pill online";
 
     try {
-      const [materiasData, anotacoesData, datasData] = await Promise.all([
+      const [materiasData, anotacoesData, datasData, simuladosData] = await Promise.all([
         DogsAPI.request("/api/materias"),
         DogsAPI.request("/api/anotacoes"),
         DogsAPI.request("/api/datas-importantes"),
+        DogsAPI.request("/api/simulados"),
       ]);
       const materias = materiasData.materias || [];
       const anotacoes = anotacoesData.anotacoes || [];
       const datas = datasData.datas_importantes || [];
+      const simulados = simuladosData.simulados || [];
       statsEl.innerHTML = `
-        <article class="stat-card"><span class="stat-label">Matérias</span><strong>${materias.length}</strong><a href="materias.php">Ver matérias →</a></article>
-        <article class="stat-card"><span class="stat-label">Anotações visíveis</span><strong>${anotacoes.length}</strong><a href="anotacoes.php">Ver anotações →</a></article>
-        <article class="stat-card"><span class="stat-label">Próximas datas</span><strong>${datas.length}</strong><a href="calendario.php">Ver calendário →</a></article>`;
+        <article class="stat-card"><span class="stat-label">Matérias</span><strong>${materias.length}</strong><a href="materias.php">Ver matérias</a></article>
+        <article class="stat-card"><span class="stat-label">Anotações visíveis</span><strong>${anotacoes.length}</strong><a href="anotacoes.php">Ver anotações</a></article>
+        <article class="stat-card"><span class="stat-label">Próximas datas</span><strong>${datas.length}</strong><a href="calendario.php">Ver calendário</a></article>
+        <article class="stat-card"><span class="stat-label">Simulados publicados</span><strong>${simulados.filter(s => s.status === "publicado").length}</strong><a href="simulados.php">Acessar simulados</a></article>`;
 
       const materiasPorId = new Map(materias.map(m => [String(m.id), m.nome_materia]));
       datasEl.innerHTML = datas.length ? datas.slice(0, 4).map(data => `

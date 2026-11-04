@@ -44,8 +44,16 @@ if (DogsApp.initPage("anotacoes")) {
           <div class="resource-main"><div class="resource-heading"><span class="resource-kicker">${escapeHtml(materia?.nome_materia || `Matéria #${a.id_materia}`)}</span><span class="visibility ${a.publica ? "public" : "private"}">${a.publica ? "Pública" : "Privada"}</span></div><h3>${escapeHtml(a.titulo)}</h3><p class="resource-description">${escapeHtml(a.descricao_anot || "Sem descrição.")}</p>
           ${links ? `<div class="link-list"><strong>Links</strong><ul>${links}</ul></div>` : ""}</div>
           <div class="resource-actions">${canEdit ? `<button class="button button-quiet" data-action="edit" data-id="${escapeHtml(a.id)}">Editar</button><button class="button button-danger" data-action="delete" data-id="${escapeHtml(a.id)}">Excluir</button>` : ""}</div>
+          <div class="image-manager-slot" data-image-manager-for="${escapeHtml(a.id)}"></div>
         </article>`;
       }).join("");
+      listEl.querySelectorAll("[data-image-manager-for]").forEach(slot => {
+        const anotacao = anotacoes.find(item => String(item.id) === slot.dataset.imageManagerFor);
+        const canManageImages = anotacao && (String(anotacao.id_usuario) === String(DogsAPI.userInfo().userId) || (admin && anotacao.publica));
+        DogsApp.setupImageManager(slot, "anotacao", Number(slot.dataset.imageManagerFor), {
+          canUpload: Boolean(canManageImages), canDelete: Boolean(canManageImages), title: "Imagens anexadas",
+        });
+      });
     } catch (error) { listEl.innerHTML = `<p class="notice error">${escapeHtml(error.message)}</p>`; }
   }
 

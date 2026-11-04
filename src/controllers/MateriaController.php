@@ -153,7 +153,7 @@ class MateriaController
             }
         } catch (PDOException $e) {
             if ($e->getCode() === '23000') {
-                responderJson(409, ['sucesso' => false, 'erro' => 'Matéria possui datas importantes vinculadas']);
+                responderJson(409, ['sucesso' => false, 'erro' => 'Matéria possui registros associados (datas importantes, anotações ou simulados)']);
                 return;
             }
             responderJson(500, ['erro' => 'Erro interno do sistema']);

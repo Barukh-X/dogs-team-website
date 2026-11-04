@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/Anotacao.php';
+require_once __DIR__ . '/../models/Imagem.php';
+require_once __DIR__ . '/../services/UploadImagemService.php';
 require_once __DIR__ . '/../includes/auth_check.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/auth_admin_check.php';
@@ -11,11 +13,16 @@ class AnotacaoController
     private const MAX_LINKS = 20;
 
     private Anotacao $anotacaoModel;
+    private Imagem $imagemModel;
+    private UploadImagemService $uploadImagemService;
 
     public function __construct()
     {
         exigirAutenticacao();
-        $this->anotacaoModel = new Anotacao(ConectarDB());
+        $pdo = ConectarDB();
+        $this->anotacaoModel = new Anotacao($pdo);
+        $this->imagemModel = new Imagem($pdo);
+        $this->uploadImagemService = new UploadImagemService();
     }
 
     private function usuarioId(): int
@@ -205,7 +212,9 @@ class AnotacaoController
         }
 
         try {
+            $arquivosDaAnotacao = $this->imagemModel->listarArquivosRecurso('anotacao', $id);
             if ($this->anotacaoModel->excluir($id, $this->usuarioId(), $this->ehAdmin())) {
+                $this->uploadImagemService->removerLista($arquivosDaAnotacao);
                 responderJson(200, ['sucesso' => true, 'mensagem' => 'Anotação excluída com sucesso']);
             } else {
                 responderJson(404, ['sucesso' => false, 'erro' => 'Anotação não encontrada']);

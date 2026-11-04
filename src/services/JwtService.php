@@ -10,7 +10,37 @@ class JwtService
 
     public function __construct(?string $secret = null)
     {
-        $this->secret = $secret ?? (dogsTeamConfig('JWT_SECRET', '') ?: 'dogs-team-local-development-only-change-this-secret');
+        $isLocal = $this->isLocalDevelopment();
+        $placeholder = 'SUBSTITUA_POR_UMA_CHAVE_ALEATORIA_LONGA_ANTES_DE_PUBLICAR';
+        $configured = $secret ?? (dogsTeamConfig('JWT_SECRET', '') ?? '');
+        $configured = trim($configured);
+
+        // A chave de desenvolvimento existe somente para instalações locais.
+        // Em produção, uma chave conhecida permitiria falsificar tokens administrativos.
+        if ($configured === $placeholder) {
+            $configured = '';
+        }
+        if ($configured === '') {
+            if (!$isLocal) {
+                throw new RuntimeException('JWT_SECRET deve ser configurado no ambiente de produção.');
+            }
+            $configured = 'dogs-team-local-development-only-change-this-secret';
+        }
+        if (!$isLocal && strlen($configured) < 32) {
+            throw new RuntimeException('JWT_SECRET deve ter pelo menos 32 bytes em produção.');
+        }
+
+        $this->secret = $configured;
+    }
+
+    private function isLocalDevelopment(): bool
+    {
+        if (PHP_SAPI === 'cli' || PHP_SAPI === 'cli-server') {
+            return true;
+        }
+        $host = strtolower((string) parse_url('http://' . ($_SERVER['HTTP_HOST'] ?? ''), PHP_URL_HOST));
+        $host = trim($host, '[]');
+        return in_array($host, ['localhost', '127.0.0.1', '::1'], true);
     }
 
     public function gerar(array $payload, int $expiraEmSegundos = 3600): string

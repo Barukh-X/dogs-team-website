@@ -2,13 +2,18 @@
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/DataImportante.php';
+require_once __DIR__ . '/../models/Imagem.php';
+require_once __DIR__ . '/../services/UploadImagemService.php';
 require_once __DIR__ . '/../includes/auth_check.php';
 require_once __DIR__ . '/../includes/auth_admin_check.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
 class DataImportanteController
 {
+    private PDO $pdo;
     private DataImportante $dataImportanteModel;
+    private Imagem $imagemModel;
+    private UploadImagemService $uploadImagemService;
     
     private function normalizarDataHora(mixed $v): ?string
     {
@@ -54,7 +59,11 @@ class DataImportanteController
     public function __construct()
     {
         exigirAutenticacao();
-        $this->dataImportanteModel = new DataImportante(ConectarDB());
+        $pdo = ConectarDB();
+        $this->pdo = $pdo;
+        $this->dataImportanteModel = new DataImportante($pdo);
+        $this->imagemModel = new Imagem($pdo);
+        $this->uploadImagemService = new UploadImagemService();
     }
 
     public function listar(): void
@@ -106,6 +115,21 @@ class DataImportanteController
         if ($campos === null) return;
 
         try {
+            // Evita que uma alteração de matéria deixe simulados já associados
+            // apontando para uma prova de outra matéria.
+            $materiaNova = $campos[3];
+            if ($materiaNova !== null) {
+                $stmt = $this->pdo->prepare(
+                    'SELECT COUNT(*) FROM simulados
+                     WHERE id_data_importante = :data AND id_materia <> :materia'
+                );
+                $stmt->execute(['data' => $id, 'materia' => $materiaNova]);
+                if ((int) $stmt->fetchColumn() > 0) {
+                    responderJson(409, ['sucesso' => false, 'erro' => 'A data está associada a simulados de outra matéria.']);
+                    return;
+                }
+            }
+
             if ($this->dataImportanteModel->editar($id, ...$campos)) {
                 responderJson(200, ['sucesso' => true, 'mensagem' => 'Data importante editada com sucesso']);
             } else {
@@ -133,7 +157,9 @@ class DataImportanteController
         }
 
         try {
+            $arquivosDaData = $this->imagemModel->listarArquivosRecurso('data_importante', $id);
             if ($this->dataImportanteModel->excluir($id)) {
+                $this->uploadImagemService->removerLista($arquivosDaData);
                 responderJson(200, ['sucesso' => true, 'mensagem' => 'Data importante excluída com sucesso']);
             } else {
                 responderJson(404, ['sucesso' => false, 'erro' => 'Data importante não encontrada']);

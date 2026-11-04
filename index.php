@@ -19,7 +19,7 @@ if ($appDirectory !== '' && $appDirectory !== '/' && str_starts_with($requestPat
 if (PHP_SAPI === 'cli-server' && preg_match('~^/api(?:/|$)~', $requestPath) !== 1) {
     $arquivoPublico = ltrim($requestPath, '/');
     $publicoPermitido = preg_match(
-        '~^(?:index|login|cadastro|dashboard|materias|anotacoes|calendario|recuperar-senha)\.php$|^(?:style\.css|api\.js|app\.js|script\.js|cadastro_script\.js|dashboard\.js|materias\.js|anotacoes\.js|calendario\.js)$|^imagens/[A-Za-z0-9_.-]+\.(?:png|jpe?g|webp)$~i',
+        '~^(?:index|login|cadastro|dashboard|materias|anotacoes|calendario|simulados|ranking|correcoes|batalha|recuperar-senha)\.php$|^(?:style\.css|api\.js|app\.js|script\.js|cadastro_script\.js|dashboard\.js|materias\.js|anotacoes\.js|calendario\.js|simulados\.js|ranking\.js|correcoes\.js|batalha\.js|batalha\.css|richtext\.js|importacao\.js)$|^modelos/[A-Za-z0-9_.-]+\.md$|^imagens/[A-Za-z0-9_.-]+\.(?:png|jpe?g|webp)$~i',
         $arquivoPublico
     ) === 1;
     if ($publicoPermitido && is_file(__DIR__ . '/' . $arquivoPublico)) {
